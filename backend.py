@@ -18,7 +18,7 @@ def connect_to_db():
     )
 
 
-# Створення таблиці
+# Створення таблиці тасків
 @app.route('/create_table', methods=['POST'])
 def create_table():
     conn = None
@@ -27,13 +27,13 @@ def create_table():
         conn = connect_to_db()
         cursor = conn.cursor()
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS ad (
+            CREATE TABLE IF NOT EXISTS task (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 ip_address VARCHAR(45) NOT NULL,
-                ad_text TEXT NOT NULL
+                description TEXT NOT NULL
             )
         """)
-        return jsonify({"message": "Таблицю 'ad' успішно створено!"}), 201
+        return jsonify({"message": "Таблицю 'task' успішно створено!"}), 201
     except Error as err:
         return jsonify({"error": str(err)}), 500
     finally:
@@ -42,47 +42,47 @@ def create_table():
         if conn:
             conn.close()
 
-# Додавання оголошення
-@app.route('/ads', methods=['POST'])
-def add_ad():
+# Додавання нового таску
+@app.route('/tasks', methods=['POST'])
+def add_task():
     data = request.json
     ip_address = data.get('ip_address')
-    ad_text = data.get('ad_text')
+    description = data.get('description')
     
     conn = connect_to_db()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO ad (ip_address, ad_text) VALUES (%s, %s)", (ip_address, ad_text))
+    cursor.execute("INSERT INTO task (ip_address, description) VALUES (%s, %s)", (ip_address, description))
     conn.commit()
     cursor.close()
     conn.close()
-    return jsonify({"message": "Запис успішно додано!"}), 201
+    return jsonify({"message": "Таск успішно додано!"}), 201
 
-# Отримання всіх оголошень
-@app.route('/ads', methods=['GET'])
-def get_all_ads():
+# Отримання всіх тасків
+@app.route('/tasks', methods=['GET'])
+def get_all_tasks():
     conn = connect_to_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM ad")
-    ads = cursor.fetchall()
+    cursor.execute("SELECT * FROM task")
+    tasks = cursor.fetchall()
     cursor.close()
     conn.close()
     
     # Форматування даних для відповіді
-    ads_list = [{"id": ad[0], "ip_address": ad[1], "ad_text": ad[2]} for ad in ads]
+    tasks_list = [{"id": task[0], "ip_address": task[1], "description": task[2]} for task in tasks]
     
-    return jsonify(ads_list), 200
+    return jsonify(tasks_list), 200
 
-# Видалення всіх оголошень
-@app.route('/ads', methods=['DELETE'])
-def delete_all_ads():
+# Видалення всіх тасків
+@app.route('/tasks', methods=['DELETE'])
+def delete_all_tasks():
     conn = None
     cursor = None
     try:
         conn = connect_to_db()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM ad")
+        cursor.execute("DELETE FROM task")
         conn.commit()  # Підтвердження змін
-        return jsonify({"message": "Усі записи успішно видалено!"}), 200
+        return jsonify({"message": "Усі таски успішно видалено!"}), 200
     except Error as err:
         return jsonify({"error": str(err)}), 500
     finally:
@@ -91,19 +91,19 @@ def delete_all_ads():
         if conn:
             conn.close()
 
-# Додавання випадкового оголошення для тестування
-@app.route('/add_random_ad', methods=['POST'])
-def add_random_ad():
-    # Генерація випадкових значень для IP-адреси та тексту оголошення
+# Додавання випадкового таску для тестування
+@app.route('/add_random_task', methods=['POST'])
+def add_random_task():
+    # Генерація випадкових значень для IP-адреси та опису таску
     ip_address = '.'.join(str(random.randint(0, 255)) for _ in range(4))
-    ad_text = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+    description = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
     
     try:
         conn = connect_to_db()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO ad (ip_address, ad_text) VALUES (%s, %s)", (ip_address, ad_text))
+        cursor.execute("INSERT INTO task (ip_address, description) VALUES (%s, %s)", (ip_address, description))
         conn.commit()
-        return jsonify({"message": "Випадковий запис успішно додано!", "ip_address": ip_address, "ad_text": ad_text}), 201
+        return jsonify({"message": "Випадковий таск успішно додано!", "ip_address": ip_address, "description": description}), 201
     except Error as err:
         return jsonify({"error": str(err)}), 500
     finally:
@@ -119,5 +119,5 @@ def hello():
 
 if __name__ == '__main__':
     with app.app_context():
-        add_random_ad()  
+        add_random_task()  
     app.run(host='0.0.0.0', port=5000)
