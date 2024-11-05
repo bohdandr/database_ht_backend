@@ -119,5 +119,6 @@ def hello():
 
 if __name__ == '__main__':
     with app.app_context():
+        create_task()
         add_random_task()  
     app.run(host='0.0.0.0', port=5000)
